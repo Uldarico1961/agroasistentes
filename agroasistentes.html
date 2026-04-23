@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1B5E20">
+<meta property="og:title" content="AgroAsistentes IA">
+<meta property="og:description" content="16 asistentes para campesinos, indigenas y afros">
+<title>AgroAsistentes IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0d3320,#1b5e20,#2e7d32);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:0}
+.app-container{width:100%;max-width:480px;height:100vh;max-height:900px;background:#f8faf8;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);position:relative}
+@media(min-width:481px){.app-container{border-radius:24px;height:95vh;margin:10px}}
+.header{background:linear-gradient(135deg,#1b5e20,#0d3320);padding:14px 18px;display:flex;align-items:center;gap:12px;color:white;flex-shrink:0;position:relative;z-index:10}
+.header-avatar{width:42px;height:42px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.header-info h1{font-size:15px;font-weight:700}
+.header-info p{font-size:11px;opacity:0.8}
+.menu-btn{background:none;border:none;color:white;font-size:22px;cursor:pointer;margin-left:auto;padding:4px}
+.back-btn{background:none;border:none;color:white;font-size:18px;cursor:pointer;padding:4px;display:none}
+.menu-dropdown{position:absolute;top:58px;right:12px;background:white;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.2);display:none;z-index:50;overflow:hidden;min-width:200px}
+.menu-dropdown.show{display:block}
+.menu-item{padding:13px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.2s;border-bottom:1px solid #f0f0f0}
+.menu-item:last-child{border-bottom:none}
+.menu-item:hover{background:#f5f5f5}
+.menu-item i{width:18px;color:#2e7d32}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden}
+.screen.active{display:flex}
+.home-header{background:linear-gradient(135deg,#1b5e20,#2e7d32);padding:24px 20px 30px;color:white;text-align:center}
+.home-header h2{font-size:20px;font-weight:800;margin-bottom:6px}
+.home-header p{font-size:12px;opacity:0.85;line-height:1.5}
+.communities-bar{display:flex;justify-content:center;gap:16px;margin-top:14px;flex-wrap:wrap}
+.community-tag{background:rgba(255,255,255,0.15);padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.search-box{padding:12px 16px;background:white;border-bottom:1px solid #e8e8e8}
+.search-box input{width:100%;padding:10px 16px;border:1px solid #ddd;border-radius:24px;font-size:13px;outline:none;font-family:'Inter',sans-serif}
+.search-box input:focus{border-color:#2e7d32}
+.assistants-grid{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f0f4f0}
+.assistant-card{background:white;border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:2px solid transparent}
+.assistant-card:hover,.assistant-card:active{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.1);border-color:#2e7d32}
+.assistant-emoji{font-size:32px;margin-bottom:6px;display:block}
+.assistant-name{font-size:11px;font-weight:700;color:#1a1a1a;line-height:1.3}
+.assistant-desc{font-size:9px;color:#666;margin-top:3px;line-height:1.3}
+.chat-area{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#e8f5e9}
+.message{max-width:88%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.55;animation:fadeInUp 0.3s ease;word-wrap:break-word}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.message.bot{align-self:flex-start;background:white;color:#222;border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.message.user{align-self:flex-end;background:linear-gradient(135deg,#2e7d32,#1b5e20);color:white;border-bottom-right-radius:3px}
+.message-time{font-size:9px;opacity:0.5;margin-top:3px;text-align:right}
+.typing{display:flex;gap:3px;padding:12px 14px;align-self:flex-start;background:white;border-radius:16px;border-bottom-left-radius:3px}
+.typing span{width:7px;height:7px;background:#999;border-radius:50%;animation:bounce 1.4s infinite ease-in-out}
+.typing span:nth-child(1){animation-delay:0s}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.quick-replies{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 6px;flex-shrink:0;background:#e8f5e9}
+.quick-btn{background:white;border:1px solid #2e7d32;color:#2e7d32;padding:6px 12px;border-radius:18px;font-size:11px;cursor:pointer;transition:all 0.2s;font-weight:500}
+.quick-btn:hover,.quick-btn:active{background:#2e7d32;color:white}
+.input-area{padding:10px 14px;background:white;display:flex;gap:8px;align-items:center;border-top:1px solid #e0e0e0;flex-shrink:0}
+.input-area input{flex:1;border:1px solid #ddd;border-radius:22px;padding:10px 16px;font-size:13px;outline:none;font-family:'Inter',sans-serif}
+.input-area input:focus{border-color:#2e7d32}
+.send-btn{width:40px;height:40px;background:linear-gradient(135deg,#2e7d32,#1b5e20);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
+.send-btn:active{transform:scale(0.9)}
+.bib-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:flex-end;z-index:200}
+.bib-modal.show{display:flex}
+.bib-content{background:white;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:80vh;overflow-y:auto;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.bib-content h3{margin-bottom:14px;color:#1b5e20;font-size:16px;display:flex;align-items:center;gap:8px}
+.bib-item{padding:12px;background:#f5f5f5;border-radius:12px;margin-bottom:10px;font-size:12px;line-height:1.5}
+.bib-item strong{color:#1b5e20}
+.bib-item a{color:#1565c0;text-decoration:none;word-break:break-all}
+.close-bib{position:absolute;top:16px;right:16px;background:#f5f5f5;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px}
+.bib-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.share-banner{position:absolute;top:56px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:white;padding:10px 18px;border-radius:24px;font-size:12px;z-index:100;display:none;animation:slideDown 0.3s ease;white-space:nowrap}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;display:none;z-index:40}
+.overlay.show{display:block}
+.api-key-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:200;padding:20px}
+.api-key-modal.show{display:flex}
+.modal-content{background:white;border-radius:20px;padding:22px;width:100%;max-width:340px}
+.modal-content h3{margin-bottom:10px;color:#333;font-size:15px}
+.modal-content p{font-size:12px;color:#666;margin-bottom:14px;line-height:1.5}
+.modal-content input{width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;margin-bottom:10px;font-size:13px}
+.modal-btns{display:flex;gap:8px}
+.modal-btns button{flex:1;padding:10px;border-radius:12px;border:none;font-size:13px;cursor:pointer;font-weight:600}
+.btn-primary{background:linear-gradient(135deg,#2e7d32,#1b5e20);color:white}
+.btn-secondary{background:#f5f5f5;color:#333}
+</style>
+</head>
+<body>
+<div class="app-container">
+<div class="header" id="mainHeader">
+<button class="back-btn" id="backBtn" onclick="goHome()">&#9664;</button>
+<div class="header-avatar" id="headerAvatar">&#127806;</div>
+<div class="header-info">
+<h1 id="headerTitle">AgroAsistentes IA</h1>
+<p id="headerSubtitle">16 asistentes especializados</p>
+</div>
+<button class="menu-btn" onclick="toggleMenu()">&#8942;</button>
+</div>
+
+<div class="menu-dropdown" id="menuDropdown">
+<div class="menu-item" onclick="showApiKeyModal()"><i class="fas fa-key"></i> Configurar API Key</div>
+<div class="menu-item" onclick="clearChat()"><i class="fas fa-trash"></i> Borrar conversacion</div>
+<div class="menu-item" onclick="showBibliography()"><i class="fas fa-book"></i> Ver bibliografia</div>
+<div class="menu-item" onclick="shareApp()"><i class="fas fa-share-alt"></i> Compartir app</div>
+<div class="menu-item" onclick="toggleMenu()"><i class="fas fa-times"></i> Cerrar</div>
+</div>
+
+<div class="screen active" id="homeScreen">
+<div class="home-header">
+<h2>&#127807; AgroAsistentes IA</h2>
+<p>Plataforma de asistencia tecnica para productores,<br>campesinos, comunidades indigenas y afrocolombianas</p>
+<div class="communities-bar">
+<span class="community-tag">&#128104;&#8205;&#127806; Campesinos</span>
+<span class="community-tag">&#127993; Indigenas</span>
+<span class="community-tag">&#129309; Afros</span>
+</div>
+</div>
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="Buscar asistente..." oninput="filterAssistants()">
+</div>
+<div class="assistants-grid" id="assistantsGrid"></div>
+</div>
+
+<div class="screen" id="chatScreen">
+<div class="chat-area" id="chatArea"></div>
+<div class="quick-replies" id="quickReplies"></div>
+<div class="input-area">
+<input type="text" id="userInput" placeholder="Escribe tu pregunta..." onkeypress="if(event.key==='Enter') sendMessage()">
+<button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+</div>
+</div>
+
+<div class="share-banner" id="shareBanner">Link copiado. Compartelo por WhatsApp!</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="api-key-modal" id="apiKeyModal">
+<div class="modal-content">
+<h3>Configurar API Key</h3>
+<p>Ingresa tu API Key de OpenAI para respuestas con IA real. Sin ella, usamos base de conocimientos verificada.</p>
+<input type="password" id="apiKeyInput" placeholder="sk-...">
+<div class="modal-btns">
+<button class="btn-secondary" onclick="closeApiKeyModal()">Cancelar</button>
+<button class="btn-primary" onclick="saveApiKey()">Guardar</button>
+</div>
+</div>
+</div>
+
+<div class="bib-modal" id="bibModal">
+<div class="bib-content">
+<div class="bib-header">
+<h3>&#128218; Bibliografia Verificada</h3>
+<button class="close-bib" onclick="closeBibliography()">&#10005;</button>
+</div>
+<div id="bibList"></div>
+</div>
+</div>
+
+<script>
+const assistants=[
+{id:'cacao',emoji:'&#127851;',name:'Cacao',desc:'Cultivo, clones, agroforesteria y beneficiado'},
+{id:'cafe',emoji:'&#9749;',name:'Cafe',desc:'Variedades, plagas, agroforesteria y precios'},
+{id:'caucho',emoji:'&#127795;',name:'Caucho',desc:'Hevea brasiliensis, clones y manejo'},
+{id:'palma',emoji:'&#127796;',name:'Palma Africana',desc:'Sostenibilidad, pequenos productores'},
+{id:'agroforesteria_cafe',emoji:'&#127794;&#9749;',name:'Agroforesteria + Cafe',desc:'Sistemas agroforestales con cafe'},
+{id:'agroforesteria_cacao',emoji:'&#127794;&#127851;',name:'Agroforesteria + Cacao',desc:'SAF con cacao y especies maderables'},
+{id:'forestales',emoji:'&#127794;',name:'Plantaciones Forestales',desc:'Eucaliptus, pinos y teca'},
+{id:'silvopastoril',emoji:'&#128004;&#127795;',name:'Silvopastoriles',desc:'Arboles + pastos + ganado'},
+{id:'restauracion',emoji:'&#127793;',name:'Restauracion Ecologica',desc:'Recuperacion de ecosistemas degradados'},
+{id:'agroforesteria_regen',emoji:'&#128260;&#127795;',name:'Agroforesteria Regenerativa',desc:'Sistemas que regeneran suelos'},
+{id:'ganaderia_regen',emoji:'&#128002;&#127807;',name:'Ganaderia Regenerativa',desc:'Pastoreo adaptativo y suelos vivos'},
+{id:'bosques',emoji:'&#127794;&#127794;',name:'Bosques Naturales',desc:'Conservacion y manejo comunitario'},
+{id:'cambio_climatico',emoji:'&#127777;',name:'Cambio Climatico',desc:'Adaptacion y mitigacion en fincas'},
+{id:'co2',emoji:'&#128168;',name:'Captura de CO2',desc:'Secuestro de carbono en fincas'},
+{id:'servicios',emoji:'&#128167;',name:'Servicios Ambientales',desc:'PSA, pagos ecosistemicos e incentivos'},
+{id:'estres_termico',emoji:'&#129397;',name:'Estres Termico',desc:'Mitigacion del calor en ganado'}
+];
+
+const bibliography={
+cacao:[
+{title:'Informe Tecnico 2024 - Programa de Cacao y Agroforesteria',author:'Ramirez-Argueta, O., Diaz, F.J., et al.',year:'2024',url:'https://fhia.org.hn/wp-content/uploads/Informe-Tecnico-2024-Programa-de-Cacao-y-Agroforesteria.pdf'},
+{title:'El Cacao en Centroamerica y El Caribe',author:'IILA / FONTAGRO',year:'2024',url:'https://iila.org/wp-content/uploads/2024/03/El-Cacao-en-CA-Version-Final-1.pdf'},
+{title:'Manual de produccion de cacao. 2da edicion',author:'Dubon, A. y Sanchez, J.',year:'2016',url:'https://fhia.org.hn'}
+],
+cafe:[
+{title:'Coffee and Cocoa Agroforestry Systems: Pathways to Deforestation, Reforestation',author:'Somarriba, E. y Lopez, A.',year:'2018',url:'http://201.207.189.89/handle/11554/9035'},
+{title:'Analysis and design of the shade canopy of cocoa-based agroforestry systems',author:'Somarriba, E., Orozco, L., Cerda, R., Lopez, A.',year:'2018',url:'http://201.207.189.89/bitstream/handle/11554/8916'}
+],
+caucho:[
+{title:'Nuevos clones de caucho natural para la Amazonia colombiana',author:'SINCHI',year:'2012',url:'https://sinchi.org.co/files/publicaciones/publicaciones/pdf/Nuevos_clones_cauchoweb.pdf'},
+{title:'Modelo productivo para el cultivo de caucho natural (Hevea brasiliensis)',author:'Cordoba-Gaona, O.J.',year:'2022',url:'https://www.researchgate.net/publication/366237189'},
+{title:'Manual para el cultivo del caucho en la Amazonia',author:'Torres, A.C.H.',year:'1999',url:'https://bit.ly/3YDZ7zg'}
+],
+palma:[
+{title:'Economia circular en el aceite de palma en Colombia',author:'RSPO / Palmas del Cesar',year:'2024',url:'https://rspo.org/es/economia-circular-pionera-en-el-panorama-del-aceite-de-palma-en-colombia/'},
+{title:'Palma de aceite colombiana: Sostenible e innovadora',author:'SAC / Fedepalma',year:'2024',url:'https://sac.org.co/palma-de-aceite-colombiana-sostenible-e-innovadora-en-conservacion-y-desarrollo-social/'}
+],
+agroforesteria_cafe:[
+{title:'Coffee and Cocoa Agroforestry Systems',author:'Somarriba, E. y Lopez, A.',year:'2018',url:'http://201.207.189.89/handle/11554/9035'},
+{title:'Analysis and design of the shade canopy of cocoa-based agroforestry systems',author:'Somarriba, E., Orozco, L., et al.',year:'2018',url:'http://201.207.189.89/bitstream/handle/11554/8916'}
+],
+agroforesteria_cacao:[
+{title:'Informe Tecnico 2024 - Programa de Cacao y Agroforesteria',author:'Ramirez-Argueta, O., et al.',year:'2024',url:'https://fhia.org.hn/wp-content/uploads/Informe-Tecnico-2024-Programa-de-Cacao-y-Agroforesteria.pdf'},
+{title:'El Cacao en Centroamerica y El Caribe',author:'IILA',year:'2024',url:'https://iila.org/wp-content/uploads/2024/03/El-Cacao-en-CA-Version-Final-1.pdf'}
+],
+forestales:[
+{title:'Documento tecnico: Pinos, eucaliptos e incendios forestales',author:'FEDEMADERAS',year:'2024',url:'https://fedemaderas.org.co/wp-content/uploads/2024/02/Documento-tecnico-comunicado-pinos-eucaliptos-e-incendio-forestales.pdf'}
+],
+silvopastoril:[
+{title:'Informe de Gestion 2024 - CIPAV',author:'CIPAV Colombia',year:'2024',url:'https://cipav.org.co/wp-content/uploads/2025/06/informe-de-gestion-2024.pdf'},
+{title:'Sustainable, efficient livestock production with high biodiversity',author:'Broom, D.M., Galindo, F.A., Murgueitio, E.',year:'2013',url:'https://doi.org/10.1098/rspb.2013.2025'}
+],
+restauracion:[
+{title:'Plan Nacional de Restauracion - Colombia',author:'MADS Colombia',year:'2015',url:'http://bit.ly/2m5wWvC'},
+{title:'Politica Nacional de Gestion Integral de Biodiversidad',author:'MADS Colombia',year:'2012',url:'https://bit.ly/2vb6QM0'}
+],
+agroforesteria_regen:[
+{title:'Mainstreaming Agroforestry in Latin America',author:'Somarriba, E., et al.',year:'2012',url:'https://doi.org/10.1007/978-94-007-4676-3_21'},
+{title:'Informe de Gestion 2024 - CIPAV',author:'CIPAV Colombia',year:'2024',url:'https://cipav.org.co/wp-content/uploads/2025/06/informe-de-gestion-2024.pdf'}
+],
+ganaderia_regen:[
+{title:'Ganaderia regenerativa: Definicion, caracterizacion y recomendaciones',author:'Bravo-Pena, F., Toro-Letelier, J.J., Alvial Cabrera, N.',year:'2024',url:'https://repositorio.cepal.org/server/api/core/bitstreams/490116fd-3d06-47cf-9f98-213e717d2d82/content'},
+{title:'Ecosystem Impacts of Multi-Species Pastured Livestock System',author:'Rowntree, J.E., et al.',year:'2020',url:'https://doi.org/10.3389/fsufs.2020.544984'},
+{title:'Managing Grazing to Restore Soil Health',author:'Teague, R. y Kreuter, U.',year:'2020',url:'https://doi.org/10.3389/fsufs.2020.534187'},
+{title:'Mas alla del pastoreo: 10 pilares para ganaderia regenerativa',author:'Universidad de la Salud Animal',year:'2024',url:'https://www.universodelasaludanimal.com/ganaderia/mas-alla-del-pastoreo-10-pilares-para-una-ganaderia-regenerativa-y-productiva-en-latinoamerica/'}
+],
+bosques:[
+{title:'Nivel de Referencia de Emisiones Forestales - Chile',author:'UNFCCC / Gobierno de Chile',year:'2023',url:'https://redd.unfccc.int/media/nref_nrf_nacional_spanishversion_dec2023-.pdf'},
+{title:'Propuesta de Ganaderia Paraguaya Sostenible',author:'MADES Paraguay',year:'2022',url:'http://dncc.mades.gov.py/wp-content/uploads/2022/06/Propuesta_Ganaderia-_Paraguaya_Sostenible_abril2022-1.pdf'}
+],
+cambio_climatico:[
+{title:'Plan Nacional de Adaptacion al Cambio Climatico (PNACC)',author:'DNP, MADS, IDEAM, Colombia',year:'2016',url:'https://bit.ly/3uGbvCI'},
+{title:'Escenarios de cambio climatico para Colombia 2011-2100',author:'IDEAM Colombia',year:'2015',url:'https://bit.ly/3GOOuQE'},
+{title:'Impact of climate change on agriculture and mitigation strategies',author:'Malhi, G.S., Kaur, M., Kaushik, P.',year:'2021',url:'https://doi.org/10.3390/su13031318'}
+],
+co2:[
+{title:'Nivel de Referencia de Emisiones Forestales - Chile',author:'UNFCCC',year:'2023',url:'https://redd.unfccc.int/media/nref_nrf_nacional_spanishversion_dec2023-.pdf'},
+{title:'Adaptive multi-paddock grazing enhances soil carbon',author:'Mosier, S., et al.',year:'2021',url:'https://doi.org/10.1016/j.jenvman.2021.112409'},
+{title:'Carbon stock and sequestration as payment for environmental services',author:'Arrais Benicio, R.M., et al.',year:'2023',url:'https://doi.org/10.1016/j.envdev.2022.100796'}
+],
+servicios:[
+{title:'Guia Conceptual y Metodologica PSA',author:'Fondo Patrimonio Natural',year:'2019',url:'https://www.patrimonionatural.org.co/wp-content/uploads/2023/02/2019-psa-guia-conceptual-y-metodologica.pdf'},
+{title:'CONPES 3886 - PSA para la construccion de paz',author:'DNP Colombia',year:'2017',url:'https://bit.ly/2uGGOwN'},
+{title:'Decreto 870 de 2017 - PSA Colombia',author:'Gobierno de Colombia',year:'2017',url:'https://apccolombia.gov.co'},
+{title:'Pagos por Servicios Ambientales: Equidad y Sostenibilidad',author:'Masbosques / CORNARE',year:'2024',url:'https://masbosques.org/pago-por-servicios-ambientales-colombia/'}
+],
+estres_termico:[
+{title:'Estres por calor y estrategias de mitigacion en sistemas ganaderos',author:'Canozzi, M.E.A. y Rovira, P.',year:'2024',url:'https://ainfo.inia.uy/digital/bitstream/item/18134/1/Canozzi-Rovira-st-269-2024-p145-150.pdf'},
+{title:'Efectos del estres por calor en produccion de leche',author:'Axon Comunicacion',year:'2023',url:'https://axoncomunicacion.net/efectos-del-estres-por-calor-en-los-rasgos-y-metabolitos-de-la-produccion-de-leche/'},
+{title:'Formas efectivas de controlar el estres por calor en ganado',author:'CEVA Ruminants',year:'2025',url:'https://ruminants.ceva.pro/es/estres-por-calor-vacuno'}
+]
+};
+
+const knowledgeBase={
+cacao:'CULTIVO DE CACAO\n\nPara campesinos, indigenas y comunidades afro:\n\nCLONES RECOMENDADOS (FHIA 2024):\n- FHIA-21, FHIA-63, FHIA-161: mas de 1,100 kg/ha/ano\n- FHIA-245, FHIA-108: mayor resistencia a moniliasis\n- Meta: superar los 350 kg/ha promedio nacional\n\nSISTEMA AGROFORESTAL (SAF-Cacao):\n- Sombra permanente menor al 30% para maxima produccion\n- Especies maderables asociadas: cedro, caoba, laurel\n- Rendimiento en verano: 39-43% (baba a seco)\n\nENFERMEDADES PRINCIPALES:\n- Moniliasis (Monilia roreri): control con clones resistentes\n- Mazorca negra (Phytophthora): drenaje + fungicidas organicos\n\nBENEFICIADO:\n- Fermentacion: 5-7 dias con volteos cada 2 dias\n- Secado: 6-8% humedad final\n- Indice de mazorca objetivo: menor o igual a 22 frutos/kg seco',
+
+cafe:'CULTIVO DE CAFE\n\nPara campesinos, indigenas y comunidades afro:\n\nVARIEDADES SEGUN ALTITUD:\n- Arabica: mayor a 1,200 msnm (mejor precio, fino)\n- Robusta: menor a 900 msnm (mas resistente)\n\nSISTEMAS AGROFORESTALES CON CAFE:\n- Sombra con Inga, Erythrina, Gliricidia\n- Conserva biodiversidad y regula microclima\n- Reduce estres termico del cultivo\n\nPLAGAS Y ENFERMEDADES:\n- Roya del cafe (Hemileia vastatrix): fungicidas + variedades resistentes\n- Broca (Hypothenemus hampei): trampas + control cultural\n- Ojo de gallo (Mycena citricolor): poda + coberturas\n\nCOSECHA SELECTIVA:\n- Cada 15-20 dias en epoca principal\n- Solo frutos maduros (rojo cereza)\n- Beneficiado humedo o seco segun mercado',
+
+caucho:'CULTIVO DE CAUCHO NATURAL\n\nPara campesinos, indigenas y comunidades afro:\n\nESPECIE: Hevea brasiliensis\n\nZONAS APTAS COLOMBIA:\n- Amazonia (Caqueta, Putumayo)\n- Piedemonte amazonico\n- Bajo Cauca antioqueno y sur de Cordoba\n\nCLONES PROMISORIOS AMAZONIA:\n- IAN 873 (testigo tradicional)\n- Nuevos clones elite de origen franco SINCHI\n- Seleccion por: supervivencia, vigor, produccion precoz\n\nENFERMEDADES FOLIARES:\n- Mal Suramericano de la Hoja (Microcyclus ulei): principal limitante\n- Antracnosis, costra negra, mancha aerolada\n- Estrategia: clones resistentes + manejo integrado\n\nMANEJO:\n- Distancia: 7m x 3m o 7m x 2.5m\n- Inicio de sangria: 5-7 anos\n- Renovacion cada 25-30 anos\n\nENFOQUE AGROFORESTAL:\n- Compatible con cultivos de ciclo corto\n- Barreras vivas contra vientos',
+
+palma:'PALMA DE ACEITE AFRICANA\n\nPara campesinos, indigenas y comunidades afro:\n\nCONTEXTO COLOMBIA:\n- Mas de 7,500 palmicultores, 75% pequena escala\n- Mas de 160 municipios productores\n- Aproximadamente 197,000 empleos directos e indirectos\n\nSOSTENIBILIDAD:\n- Certificacion RSPO disponible para pequenos\n- Acuerdo de Deforestacion Cero con Fedepalma\n- Mas de 24,000 ha de areas de alto valor de conservacion\n\nECONOMIA CIRCULAR:\n- Biocompost de biomasa industrial\n- Biogas a partir de emisiones de metano\n- Generacion electrica con residuos\n\nPLAN PADRINO:\n- Formalizacion laboral de pequenos productores\n- Mas de 1,500 trabajadores formalizados (37% mujeres cabeza de hogar)\n- 80% de beneficiados son pequena escala\n\nVARIEDADES:\n- DxP hibridos de alta produccion\n- Densidad: 128-143 plantas/ha',
+
+agroforesteria_cafe:'AGROFORESTERIA CON CAFE\n\nPara campesinos, indigenas y comunidades afro:\n\nDISENO DEL DOSEL DE SOMBRA:\n- Estratos: emergentes, alto, medio, bajo\n- Especies: Inga spp., Erythrina spp., Gliricidia sepium\n- Cobertura: 30-60% segun altitud y clima\n\nBENEFICIOS DOCUMENTADOS:\n- Regulacion de microclima (temperatura, humedad)\n- Conservacion de biodiversidad (avifauna, insectos)\n- Proteccion del suelo contra erosion\n- Ingresos diversificados (madera, fruta, cafe)\n\nMANEJO:\n- Poda de sombra: 2-3 veces/ano\n- Mantener luminosidad adecuada para cafe\n- Evitar competencia por agua y nutrientes\n\nADAPTACION AL CAMBIO CLIMATICO:\n- Sombra reduce estres termico del cafe\n- Mayor resiliencia a sequias\n- Corredores biologicos para fauna',
+
+agroforesteria_cacao:'AGROFORESTERIA CON CACAO\n\nPara campesinos, indigenas y comunidades afro:\n\nSISTEMAS EVALUADOS (FHIA, 28 anos de investigacion):\n- SAF-Cacao con 36 especies maderables nativas\n- Modalidades: integracion, parcelas puras, en linea (linderos)\n\nESPECIES MADERABLES RECOMENDADAS:\n- Corto plazo (12 anos, DAP 50cm): limba, San Juan de Pozo, laurel negro\n- Largo plazo: caoba del Atlantico, cedro, granadillo rojo\n- Especies en linderos: generan ingresos sin competir\n\nRESULTADOS DE 25 ANOS:\n- Mejor desempeno agroeconomico con maderables\n- Captura de carbono + biodiversidad + restauracion paisajistica\n- Ingresos diversificados: cacao + madera\n\nCOMPATIBILIDAD:\n- Sincronizacion de cosechas y manejo fitosanitario\n- Ventanas criticas: verano = mas frutos sanos\n- Lluvias = mayor incidencia de enfermedades',
+
+forestales:'PLANTACIONES FORESTALES\n\nPara campesinos, indigenas y comunidades afro:\n\nESPECIES PRINCIPALES COLOMBIA:\n- Pino patula, pino caribe, pino tecunumani\n- Eucalipto grandis, eucalipto pellita\n- Teca, melina, acacia\n\nACLARACION IMPORTANTE:\n- Especies introducidas NO son especies invasoras\n- Mas de 50 anos de experiencia en Colombia\n- Reguladas por Resoluciones 0848/2008 y 0207/2010\n- Apoyadas por Certificado de Incentivo Forestal (CIF)\n\nMANEJO:\n- Rotacion: 15-25 anos segun especie\n- Raleo: 8-12 anos para ingresos intermedios\n- Certificacion forestal sostenible (FSC/PEFC)\n\nBENEFICIOS:\n- Madera para construccion, pulpa, biocombustibles\n- Captura de CO2 y servicios ambientales\n- Diversificacion de ingresos familiares\n\nPRECAUCION:\n- No reemplazar bosques nativos\n- Usar tierras degradadas o de baja productividad\n- Mantener corredores de biodiversidad',
+
+silvopastoril:'SISTEMAS SILVOPASTORILES\n\nPara campesinos, indigenas y comunidades afro:\n\nDEFINICION: Integracion de arboles + pastos + ganado en el mismo predio\n\nTIPOS PRINCIPALES:\n- Arboles dispersos en potreros\n- Cercas vivas (maderables o forrajeros)\n- Bancos de proteina (Leucaena, Cratylia)\n- Franjas arboreas en contorno\n\nESPECIES ARBOREAS RECOMENDADAS:\n- Leucaena leucocephala (forraje + sombra)\n- Guazuma ulmifolia (sombra + fruto)\n- Samanea saman (sombra extensa)\n- Erythrina fusca (cercas vivas)\n\nBENEFICIOS DOCUMENTADOS (CIPAV):\n- Mayor produccion de leche/carne por hectarea\n- Mejor calidad del suelo (materia organica)\n- Reduccion de parasitismo gastrointestinal\n- Bienestar animal (sombra, descanso)\n- Biodiversidad: aves, insectos, flora\n\nGANADERIA DE BASE AGROECOLOGICA:\n- Pastoreo rotacional racional\n- Carga animal ajustada a capacidad del potrero\n- Cero quema',
+
+restauracion:'RESTAURACION ECOLOGICA\n\nPara campesinos, indigenas y comunidades afro:\n\nMARCO NORMATIVO COLOMBIA:\n- Ley 99 de 1993 (Art. 108 y 111)\n- Plan Nacional de Restauracion (MADS, 2015)\n- Decreto 1007 de 2018 (PSA)\n\nENFOQUE COMUNITARIO:\n- Participacion de comunidades locales\n- Uso de especies nativas\n- Recuperacion de funciones ecosistemicas\n\nESTRATEGIAS:\n- Reforestacion con especies nativas\n- Enriquecimiento de bosques secundarios\n- Control de especies invasoras\n- Proteccion de regeneracion natural\n\nINDICADORES DE EXITO:\n- Cobertura vegetal mayor al 70%\n- Presencia de fauna nativa\n- Recuperacion de ciclos hidrologicos\n- Estabilidad de suelos\n\nINCENTIVOS:\n- Pagos por Servicios Ambientales (PSA)\n- Certificado de Incentivo Forestal (CIF)\n- Proyectos de carbono (REDD+)\n\nEXPERIENCIA CHILE:\n- Meta: 200,000 ha de recuperacion de bosques nativos\n- Captura: 0.9-1.2 MtCO2e/ano',
+
+agroforesteria_regen:'AGROFORESTERIA REGENERATIVA\n\nPara campesinos, indigenas y comunidades afro:\n\nPRINCIPIOS:\n- Regenerar suelos degradados\n- Aumentar biodiversidad funcional\n- Capturar carbono en biomasa y suelo\n- Diversificar ingresos del predio\n\nPRACTICAS CLAVE:\n- Cobertura permanente del suelo (mulch, rastrojo)\n- Integracion arboles + cultivos + animales\n- Cero labranza o labranza minima\n- Uso de abonos organicos y compostaje\n\nSISTEMAS EXITOSOS:\n- SAF-Cacao con 36 especies maderables (FHIA)\n- Sistemas Quesungual (Honduras)\n- Agroforesteria de corteza de cacao (Centroamerica)\n\nINDICADORES DE REGENERACION:\n- Materia organica del suelo aumentando\n- Infiltracion de agua mejorada\n- Presencia de lombrices y microorganismos\n- Reduccion de insumos externos\n\nBENEFICIOS ECONOMICOS:\n- Multiples productos por hectarea\n- Resiliencia a variabilidad climatica\n- Valorizacion de servicios ambientales',
+
+ganaderia_regen:'GANADERIA REGENERATIVA\n\nPara campesinos, indigenas y comunidades afro:\n\nDEFINICION (CEPAL, 2024):\nSistemas que mejoran los recursos naturales, la biodiversidad y la calidad de vida, superando la mera sostenibilidad.\n\n10 PILARES:\n1. Pastoreo adaptativo / rotacional\n2. Alta densidad de animales por corto tiempo\n3. Periodos de descanso largos del pasto\n4. Diversidad de especies forrajeras\n5. Suelo cubierto permanentemente\n6. Integracion de arboles (silvopastoril)\n7. Manejo holistico de decisiones\n8. Biodiversidad como indicador\n9. Bienestar animal\n10. Rentabilidad economica\n\nPASTOREO MULTI-PADDOCK (Teague):\n- Muchos potreros pequenos\n- Alta presion por 1-3 dias\n- Descanso de 30-90 dias\n- Resultado: suelos con mas carbono\n\nRESULTADOS DOCUMENTADOS:\n- Ganancia diaria de peso hasta 56% mayor con sombra\n- Mayor materia organica del suelo\n- Mejor retencion de agua\n- Reduccion de erosion\n\nADAPTACION AL CAMBIO CLIMATICO:\n- Sistemas mas resilientes a sequias\n- Menor dependencia de insumos externos\n- Pastos mas productivos en condiciones extremas',
+
+bosques:'BOSQUES NATURALES\n\nPara campesinos, indigenas y comunidades afro:\n\nIMPORTANCIA:\n- Reservorios de biodiversidad\n- Regulacion hidrica\n- Captura de carbono\n- Base cultural para comunidades indigenas\n\nMANEJO COMUNITARIO:\n- Planes de manejo forestal comunitario\n- Aprovechamiento sostenible de madera y NTFP\n- Turismo de naturaleza\n- Pagos por Servicios Ambientales\n\nCONSERVACION:\n- Zonas de reserva (ley 2da de 1959)\n- Areas de proteccion de rondas hidricas\n- Corredores biologicos\n- Reforestacion con especies nativas\n\nEXPERIENCIA CHILE (NDC):\n- Manejo sustentable de 200,000 ha bosques nativos\n- Captura: 0.9-1.2 MtCO2e/ano\n- Forestacion: 200,000 ha adicionales\n- Reduccion de emisiones forestales 25% al 2030\n\nDERECHOS:\n- Resguardos indigenas\n- Territorios colectivos afrocolombianos\n- Zonas de reserva campesina\n- Comunidades en areas protegidas',
+
+cambio_climatico:'CAMBIO CLIMATICO EN LA FINCA\n\nPara campesinos, indigenas y comunidades afro:\n\nIMPACTOS EN COLOMBIA (IDEAM):\n- Aumento de temperatura: +0.8C desde 1960\n- Cambio en patrones de lluvia\n- Mayor frecuencia de eventos extremos\n- Afectacion a 9 cultivos principales en Cundinamarca\n\nESTRATEGIAS DE ADAPTACION:\n- Diversificacion de cultivos\n- Sistemas agroforestales (regulan microclima)\n- Variedades tolerantes a sequia/calor\n- Manejo de cuencas hidrograficas\n- Reservorios y sistemas de riego\n\nMITIGACION:\n- Suelos vivos (materia organica)\n- Arboles en fincas (captura CO2)\n- Eficiencia energetica\n- Biogas de residuos agricolas\n\nHERRAMIENTAS:\n- Plan Nacional de Adaptacion (PNACC, 2016)\n- Tercera Comunicacion Nacional (IDEAM, 2016)\n- Escenarios climaticos 2011-2100\n- Indices de sequia y aridez\n\nCONOCIMIENTO TRADICIONAL:\n- Calendarios agricolas indigenas\n- Senales de la naturaleza\n- Variedades criollas adaptadas',
+
+co2:'CAPTURA DE CO2 EN LA FINCA\n\nPara campesinos, indigenas y comunidades afro:\n\nSECUESTRO DE CARBONO:\n- Biomasa aerea (arboles, cultivos)\n- Biomasa subterranea (raices)\n- Materia organica del suelo (mas importante)\n\nPRACTICAS QUE CAPTURAN MAS CARBONO:\n- Agroforesteria (cacao + maderables)\n- Silvopastoril (arboles en potreros)\n- Cero labranza\n- Pastoreo rotacional adaptativo\n- Abonos organicos y compostaje\n- Restauracion de bosques\n\nDATOS DE REFERENCIA:\n- Bosques nativos: 150-300 t CO2/ha\n- SAF cacao: 50-120 t CO2/ha\n- Silvopastoril: 30-80 t CO2/ha\n- Suelos mejorados: 0.5-2 t CO2/ha/ano\n\nMECANISMOS DE PAGO:\n- Mercados de carbono voluntario\n- REDD+ (bosques)\n- Pagos por Servicios Ambientales\n- Bonos de carbono\n\nEXPERIENCIA CHILE:\n- Forestacion 200,000 ha: 3.0-3.4 MtCO2e/ano\n- Manejo bosques nativos: 0.9-1.2 MtCO2e/ano\n\nBENEFICIOS ADICIONALES:\n- Mejor fertilidad del suelo\n- Mayor retencion de agua\n- Biodiversidad aumentada',
+
+servicios:'SERVICIOS AMBIENTALES Y PSA\n\nPara campesinos, indigenas y comunidades afro:\n\nQUE SON?\nCompensacion economica por conservar o restaurar ecosistemas que proveen:\n- Agua limpia\n- Biodiversidad\n- Captura de carbono\n- Regulacion climatica\n- Belleza paisajistica\n\nMARCO COLOMBIA:\n- Ley 99 de 1993 (Art. 108, 111)\n- CONPES 3886 de 2017 (PSA para la paz)\n- Decreto 870 de 2017 (financiacion)\n- Decreto 1007 de 2018 (definicion PSA)\n- CONPES 3934 de 2018 (Crecimiento Verde)\n\nMODALIDADES:\n- Hidricos: proteccion de cuencas\n- Carbono: secuestro de CO2\n- Biodiversidad: conservacion de especies\n- Paisajisticos: recreacion y turismo\n\nEJEMPLOS EN COLOMBIA:\n- Paramo de Almorzadero\n- Masbosques + CORNARE (Antioquia)\n- Programas de CARs regionales\n- PSA de acueductos municipales\n\nCIFRAS:\n- 2021: aproximadamente $10,800 millones COP en PSA\n- Mas de 40,000 familias beneficiadas\n- 29% poblacion rural en pobreza multidimensional\n\nREQUISITOS:\n- Predio en area estrategica\n- Plan de manejo\n- Compromiso de conservacion\n- Monitoreo periodico',
+
+estres_termico:'ESTRES TERMICO EN GANADO\n\nPara campesinos, indigenas y comunidades afro:\n\nQUE ES?\nCuando la temperatura ambiente alcanza o supera la temperatura corporal del animal, las vias de perdida de calor (conduccion, conveccion, radiacion) se vuelven ineficientes.\n\nSENALES DE ALERTA:\n- Aumento de tasa respiratoria\n- Jadeo\n- Busqueda de sombra\n- Reduccion del consumo de forraje\n- Disminucion de produccion de leche\n\nEFECTOS DOCUMENTADOS:\n- Perdida de produccion lechera: -2 kg/dia o mas\n- Menor ganancia de peso\n- Problemas reproductivos\n- Mayor susceptibilidad a enfermedades\n\nESTRATEGIAS DE MITIGACION:\n\n1. SOMBRA (mas efectiva):\n- Arboles en potreros (silvopastoril)\n- Cobertizos artificiales\n- Reduccion de estres termico en 7.3%\n\n2. AGUA FRESCA Y LIMPIA:\n- Bebederos a voluntad\n- Sombra sobre bebederos\n- Factor #1 en hidratacion\n\n3. MANEJO DEL PASTOREO:\n- Pastoreo en horas frescas (manana/noche)\n- Evitar pastoreo 10am-4pm en verano\n- Pastoreo rotacional rapido\n\n4. NUTRICION:\n- Ajustar dieta en epocas de calor\n- Minerales y electrolitos\n- Evitar alimentos que generen mucho calor\n\n5. GENETICA:\n- Razas Bos indicus (Cebu) mas tolerantes\n- Haplotipo SLICK (pelo corto y fino)\n- Seleccion genomica para termotolerancia'
+};
+
+const quickRepliesData={
+cacao:['Clones FHIA','Moniliasis','SAF-Cacao','Beneficiado'],
+cafe:['Variedades','Roya','Sombra','Cosecha'],
+caucho:['Clones','Mal de la hoja','Sangria','Zonas'],
+palma:['Pequenos productores','RSPO','Economia circular','Empleo'],
+agroforesteria_cafe:['Diseno de sombra','Especies','Biodiversidad','Microclima'],
+agroforesteria_cacao:['Especies maderables','Ingresos','Carbono','Linderos'],
+forestales:['Pinos','Eucaliptos','Teca','CIF'],
+silvopastoril:['Leucaena','Pastoreo','Produccion leche','Biodiversidad'],
+restauracion:['Especies nativas','PSA','CIF','Comunidades'],
+agroforesteria_regen:['Suelos vivos','Cobertura','Diversificacion','Resiliencia'],
+ganaderia_regen:['Pastoreo rotacional','Suelos','Sombra','Biodiversidad'],
+bosques:['Manejo comunitario','Carbono','REDD+','Derechos'],
+cambio_climatico:['Adaptacion','Mitigacion','Sequia','Escenarios'],
+co2:['Secuestro','Mercados','REDD+','Suelos'],
+servicios:['PSA','Hidricos','Carbono','Requisitos'],
+estres_termico:['Sombra','Agua','Genetica','Nutricion']
+};
+
+const welcomeMessages={
+cacao:'Hola! Soy tu asistente de Cacao. Puedo ayudarte con clones, sistemas agroforestales, enfermedades y beneficiado. Que necesitas saber?',
+cafe:'Saludos! Soy tu asistente de Cafe. Conozco sobre variedades, agroforesteria, plagas y cosecha selectiva. En que te ayudo?',
+caucho:'Buen dia! Soy tu asistente de Caucho. Te oriento sobre Hevea brasiliensis, clones, zonas de siembra y manejo fitosanitario.',
+palma:'Hola! Soy tu asistente de Palma Africana. Informacion sobre sostenibilidad, pequenos productores, certificacion y economia circular.',
+agroforesteria_cafe:'Bienvenido! Soy especialista en Agroforesteria con Cafe. Diseno de sombra, especies arboreas y adaptacion climatica.',
+agroforesteria_cacao:'Hola! Soy experta en Agroforesteria con Cacao. Especies maderables, SAF, captura de carbono e ingresos diversificados.',
+forestales:'Saludos! Soy tu asistente de Plantaciones Forestales. Pinos, eucaliptos, teca, incentivos y manejo sostenible.',
+silvopastoril:'Buen dia! Soy especialista en Sistemas Silvopastoriles. Arboles, pastos, ganado, produccion y bienestar animal.',
+restauracion:'Hola! Soy tu asistente de Restauracion Ecologica. Recuperacion de ecosistemas, especies nativas, PSA y comunidades.',
+agroforesteria_regen:'Bienvenido! Soy experta en Agroforesteria Regenerativa. Suelos vivos, biodiversidad, resiliencia y diversificacion.',
+ganaderia_regen:'Hola! Soy especialista en Ganaderia Regenerativa. Pastoreo adaptativo, suelos vivos, sombra y rentabilidad.',
+bosques:'Saludos! Soy tu asistente de Bosques Naturales. Conservacion, manejo comunitario, carbono y derechos territoriales.',
+cambio_climatico:'Buen dia! Soy experta en Cambio Climatico. Adaptacion, mitigacion, escenarios y estrategias para tu finca.',
+co2:'Hola! Soy tu asistente de Captura de CO2. Secuestro de carbono, mercados, practicas regenerativas y pagos.',
+servicios:'Bienvenido! Soy especialista en Servicios Ambientales. PSA, pagos ecosistemicos, requisitos e incentivos.',
+estres_termico:'Hola! Soy tu asistente de Estres Termico. Mitigacion del calor en ganado, sombra, agua, genetica y nutricion.'
+};
+
+let currentAssistant=null;
+let apiKey=localStorage.getItem('agro_api_key')||'';
+
+const homeScreen=document.getElementById('homeScreen');
+const chatScreen=document.getElementById('chatScreen');
+const chatArea=document.getElementById('chatArea');
+const quickReplies=document.getElementById('quickReplies');
+const userInput=document.getElementById('userInput');
+const backBtn=document.getElementById('backBtn');
+const headerAvatar=document.getElementById('headerAvatar');
+const headerTitle=document.getElementById('headerTitle');
+const headerSubtitle=document.getElementById('headerSubtitle');
+
+function init(){renderAssistants()}
+
+function renderAssistants(filter){
+const grid=document.getElementById('assistantsGrid');
+grid.innerHTML='';
+assistants.forEach(function(a){
+if(filter && !a.name.toLowerCase().includes(filter.toLowerCase()) && !a.desc.toLowerCase().includes(filter.toLowerCase()))return;
+const card=document.createElement('div');
+card.className='assistant-card';
+card.onclick=function(){openAssistant(a.id)};
+card.innerHTML='<span class="assistant-emoji">'+a.emoji+'</span><div class="assistant-name">'+a.name+'</div><div class="assistant-desc">'+a.desc+'</div>';
+grid.appendChild(card);
+});
+}
+
+function filterAssistants(){renderAssistants(document.getElementById('searchInput').value)}
+
+function openAssistant(id){
+currentAssistant=id;
+const a=assistants.find(function(x){return x.id===id});
+headerAvatar.textContent=a.emoji;
+headerTitle.textContent=a.name;
+headerSubtitle.textContent='Asistente especializado';
+backBtn.style.display='block';
+homeScreen.classList.remove('active');
+chatScreen.classList.add('active');
+chatArea.innerHTML='';
+addMessage(welcomeMessages[id],false);
+quickReplies.innerHTML='';
+(quickRepliesData[id]||[]).forEach(function(q){
+const btn=document.createElement('button');
+btn.className='quick-btn';
+btn.textContent=q;
+btn.onclick=function(){userInput.value=q;sendMessage()};
+quickReplies.appendChild(btn);
+});
+userInput.focus();
+}
+
+function goHome(){
+currentAssistant=null;
+headerAvatar.textContent='\u{1F33E}';
+headerTitle.textContent='AgroAsistentes IA';
+headerSubtitle.textContent='16 asistentes especializados';
+backBtn.style.display='none';
+chatScreen.classList.remove('active');
+homeScreen.classList.add('active');
+}
+
+function getTime(){
+const now=new Date();
+return now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+}
+
+function addMessage(text,isUser){
+const div=document.createElement('div');
+div.className='message '+(isUser?'user':'bot');
+let html=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+html=html.replace(/\n/g,'<br>');
+div.innerHTML=html+'<div class="message-time">'+getTime()+'</div>';
+chatArea.appendChild(div);
+chatArea.scrollTop=chatArea.scrollHeight;
+}
+
+function showTyping(){
+const div=document.createElement('div');
+div.className='typing';
+div.id='typingIndicator';
+div.innerHTML='<span></span><span></span><span></span>';
+chatArea.appendChild(div);
+chatArea.scrollTop=chatArea.scrollHeight;
+}
+
+function hideTyping(){
+const el=document.getElementById('typingIndicator');
+if(el)el.remove();
+}
+
+function getLocalResponse(text){
+const lower=text.toLowerCase();
+const kb=knowledgeBase[currentAssistant]||'';
+
+if(lower.includes('hola')||lower.includes('buenos')||lower.includes('buenas')){
+return welcomeMessages[currentAssistant]||'Hola! En que puedo ayudarte?';
+}
+if(lower.includes('gracias')){
+return 'Con gusto! Estoy aqui para apoyar a campesinos, comunidades indigenas y afrocolombianas. Tienes otra pregunta?';
+}
+if(lower.includes('bibliografia')||lower.includes('referencias')||lower.includes('fuentes')){
+showBibliography();
+return 'Aqui tienes la bibliografia verificada de este tema. Todos los documentos tienen enlace para que puedas verificar la informacion.';
+}
+if(lower.includes('campesino')||lower.includes('indigena')||lower.includes('afro')){
+return 'Esta informacion esta especialmente disenada para campesinos, comunidades indigenas y afrocolombianas. Incluye practicas de bajo costo, conocimiento tradicional y acceso a incentivos. Que tema especifico te interesa?';
+}
+
+if(kb)return kb;
+return 'Entiendo tu pregunta sobre "'+text+'". Estoy usando mi base de conocimientos verificada con bibliografia real. Para mas detalles, consulta la bibliografia disponible en el menu. Te gustaria que profundice en algun aspecto especifico?';
+}
+
+async function callOpenAI(text){
+try{
+const response=await fetch('https://api.openai.com/v1/chat/completions',{
+method:'POST',
+headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+body:JSON.stringify({
+model:'gpt-3.5-turbo',
+messages:[
+{role:'system',content:'Eres un asistente agricola experto en '+(currentAssistant?assistants.find(function(a){return a.id===currentAssistant}).name:'agricultura tropical')+'. Responde en espanol de forma clara, practica y con datos especificos. Considera que tu audiencia son campesinos, comunidades indigenas y afrocolombianas. Usa emojis relevantes.'},
+{role:'user',content:text}
+],
+max_tokens:600,
+temperature:0.7
+})
+});
+const data=await response.json();
+if(data.choices&&data.choices[0])return data.choices[0].message.content;
+throw new Error('No response');
+}catch(e){return getLocalResponse(text)}
+}
+
+async function sendMessage(){
+const text=userInput.value.trim();
+if(!text)return;
+addMessage(text,true);
+userInput.value='';
+showTyping();
+let response;
+if(apiKey&&apiKey.startsWith('sk-')){
+response=await callOpenAI(text);
+}else{
+await new Promise(function(r){setTimeout(r,700+Math.random()*800)});
+response=getLocalResponse(text);
+}
+hideTyping();
+addMessage(response);
+}
+
+function toggleMenu(){
+document.getElementById('menuDropdown').classList.toggle('show');
+document.getElementById('overlay').classList.toggle('show');
+}
+
+function clearChat(){
+if(currentAssistant){
+chatArea.innerHTML='';
+addMessage(welcomeMessages[currentAssistant],false);
+}
+toggleMenu();
+}
+
+function shareApp(){
+const url=window.location.href;
+if(navigator.share){
+navigator.share({title:'AgroAsistentes IA',text:'Plataforma de asistencia agricola para campesinos, indigenas y afros',url:url});
+}else{
+navigator.clipboard.writeText(url).then(function(){
+const banner=document.getElementById('shareBanner');
+banner.style.display='block';
+setTimeout(function(){banner.style.display='none'},3000);
+});
+}
+toggleMenu();
+}
+
+function showApiKeyModal(){
+document.getElementById('apiKeyModal').classList.add('show');
+document.getElementById('apiKeyInput').value=apiKey;
+toggleMenu();
+}
+
+function closeApiKeyModal(){document.getElementById('apiKeyModal').classList.remove('show')}
+
+function saveApiKey(){
+apiKey=document.getElementById('apiKeyInput').value.trim();
+if(apiKey){localStorage.setItem('agro_api_key',apiKey);if(currentAssistant)addMessage('API Key guardada. Ahora usare inteligencia artificial real para responder.');}
+else{localStorage.removeItem('agro_api_key');apiKey='';if(currentAssistant)addMessage('API Key eliminada. Usare base de conocimientos local verificada.');}
+closeApiKeyModal();
+}
+
+function showBibliography(){
+const bibList=document.getElementById('bibList');
+const currentBib=bibliography[currentAssistant]||[];
+const allBib=currentBib.length>0?currentBib:Object.values(bibliography).flat();
+bibList.innerHTML='';
+allBib.forEach(function(b){
+const item=document.createElement('div');
+item.className='bib-item';
+item.innerHTML='<strong> '+b.title+'</strong><br> '+b.author+'<br> '+b.year+'<br> <a href="'+b.url+'" target="_blank">'+b.url+'</a>';
+bibList.appendChild(item);
+});
+if(allBib.length===0){bibList.innerHTML='<p style="text-align:center;color:#666;padding:20px;">No hay bibliografia disponible para este tema.</p>';}
+document.getElementById('bibModal').classList.add('show');
+toggleMenu();
+}
+
+function closeBibliography(){document.getElementById('bibModal').classList.remove('show')}
+
+document.getElementById('bibModal').addEventListener('click',function(e){if(e.target===this)closeBibliography()});
+
+init();
+</script>
+</body>
+</html>
